@@ -1,0 +1,36 @@
+stages:
+ - docker
+
+variables:
+  IMAGE_NAME: "docker.dhbw.chd.cx/savood/nginx-well-known"
+
+buildDocker:
+  image: docker:latest
+  services:
+   - docker:dind
+  stage: docker
+  script:
+   - docker info
+   - docker build -t "$IMAGE_NAME:${CI_BUILD_REF}" -t "$IMAGE_NAME:latest" .
+   - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN "docker.dhbw.chd.cx"
+   - docker push "$IMAGE_NAME:${CI_BUILD_REF}"
+   - docker push "$IMAGE_NAME:latest"
+  only:
+   - master
+  dependencies:
+   - build
+
+buildDockerStaging:
+  image: docker:latest
+  services:
+   - docker:dind
+  stage: docker
+  script:
+   - docker info
+   - docker build -t "$IMAGE_NAME:${CI_BUILD_REF}" .
+   - docker login -u gitlab-ci-token -p $CI_BUILD_TOKEN "docker.dhbw.chd.cx"
+   - docker push "$IMAGE_NAME:${CI_BUILD_REF}"
+  except:
+   - master
+  dependencies:
+   - build
